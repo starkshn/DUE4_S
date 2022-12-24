@@ -35,6 +35,7 @@ AABCharacter::AABCharacter()
 		GetMesh()->SetAnimInstanceClass(WARRIOR_ANIM.Class);
 	}
 	
+	SetControlMode(0);
 }
 
 // Called when the game starts or when spawned
@@ -42,6 +43,21 @@ void AABCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	
+}
+
+void AABCharacter::SetControlMode(int32 ControlMode)
+{
+	if (ControlMode == 0)
+	{
+		SpringArm->TargetArmLength = 450.f;
+		SpringArm->SetRelativeRotation(FRotator::ZeroRotator);
+		SpringArm->bUsePawnControlRotation = true;
+		SpringArm->bInheritPitch = true;
+		SpringArm->bInheritYaw = true;
+		SpringArm->bInheritRoll = true;
+		SpringArm->bDoCollisionTest = true;
+		bUseControllerRotationYaw = false;
+	}
 }
 
 // Called every frame
