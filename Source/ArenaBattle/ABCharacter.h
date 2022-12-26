@@ -21,6 +21,23 @@ protected:
 
 	void SetControlMode(int32 ControlMode);
 
+	enum class EControlMode
+	{
+		GTA,
+		DIABLO,
+	};
+
+	void SetControlMode(EControlMode NewControlMode);
+	EControlMode CurrentControlMode = EControlMode::GTA;
+	FVector DirectionToMove = FVector::ZeroVector;
+
+	// SpringArm -> ViewChange시 부드럽게 전환
+	float ArmLengthTo = 0.f;
+	FRotator ArmRotationTo = FRotator::ZeroRotator;
+	float ArmLengthSpeed = 0.f;
+	float ArmRotationSpeed = 0.f;
+
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -39,5 +56,8 @@ private:
 	void LeftRight(float NewAxisValue);
 	void LookUp(float NewAxisValue);
 	void Turn(float NewAxisValue);
+
+	// View Change
+	void ViewChange();
 
 };
