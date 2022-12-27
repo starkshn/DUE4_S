@@ -18,6 +18,7 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+	virtual void PostInitializeComponents() override;
 
 	void SetControlMode(int32 ControlMode);
 
@@ -60,4 +61,41 @@ private:
 	// View Change
 	void ViewChange();
 
+	// Attack
+	void Attack();
+
+	// Montage Delegate
+	UFUNCTION()
+	void OnAttackMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+
+
+
+private:
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category=Attack, Meta=(AllowPrivateAccess=true))
+	bool IsAttacking;
+
+// Montage Combo
+private:
+	void AttackStartComboState();
+	void AttackEndComboState();
+
+	// 다음 콤보로의 이동 가능 여부
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
+	bool CanNextCombo;
+
+	// 콤보 입력 여부
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
+	bool IsComboInputOn;
+
+	// 현재 실행중인 콤보 카운터
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
+	int32 CurrentCombo;
+
+	// 콤보 카운터의 최대치
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
+	int32 MaxCombo;
+
+
+	UPROPERTY()
+	class UABAnimInstance* ABAnim;
 };
