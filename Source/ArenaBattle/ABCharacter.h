@@ -38,8 +38,7 @@ protected:
 	float ArmLengthSpeed = 0.f;
 	float ArmRotationSpeed = 0.f;
 
-
-public:	
+public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
@@ -64,11 +63,12 @@ private:
 	// Attack
 	void Attack();
 
+	// AttackCheck
+	void AttackCheck();
+
 	// Montage Delegate
 	UFUNCTION()
 	void OnAttackMontageEnded(UAnimMontage* Montage, bool bInterrupted);
-
-
 
 private:
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category=Attack, Meta=(AllowPrivateAccess=true))
@@ -98,4 +98,10 @@ private:
 
 	UPROPERTY()
 	class UABAnimInstance* ABAnim;
+
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category=Attack, Meta = (AllowPrivateAccess = true))
+	float AttackRange;
+
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
+	float AttackRadius;
 };

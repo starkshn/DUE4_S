@@ -45,6 +45,12 @@ void UABAnimInstance::JumpToAttackMontageSection(int32 NewSection)
 	Montage_JumpToSection(GetAttackMontageSectionName(NewSection), AttackMontage);
 }
 
+FName UABAnimInstance::GetAttackMontageSectionName(int32 Section)
+{
+	ABCHECK(FMath::IsWithinInclusive<int32>(Section, 1, 4), NAME_None);
+	return FName(*FString::Printf(TEXT("Attack%d"), Section));
+}
+
 void UABAnimInstance::AnimNotify_NextAttackCheck()
 {
 	OnNextAttackCheck.Broadcast();
@@ -55,8 +61,4 @@ void UABAnimInstance::AnimNotify_AttackHitCheck()
 	OnAttackHitCheck.Broadcast();
 }
 
-FName UABAnimInstance::GetAttackMontageSectionName(int32 Section)
-{
-	ABCHECK(FMath::IsWithinInclusive<int32>(Section, 1, 4), NAME_None);
-	return FName(*FString::Printf(TEXT("Attack%d"), Section));
-}
+
