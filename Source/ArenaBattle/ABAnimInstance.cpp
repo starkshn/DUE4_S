@@ -8,6 +8,7 @@ UABAnimInstance::UABAnimInstance()
 {
 	CurrentPawnSpeed = 0.f;
 	IsInAir = false;
+	IsDead = false;
 
 	static ConstructorHelpers::FObjectFinder<UAnimMontage> ATTACK_MONTAGE(TEXT("AnimMontage'/Game/Animations/SK_Mannequin_Skeleton_Montage.SK_Mannequin_Skeleton_Montage'"));
 	if (ATTACK_MONTAGE.Succeeded())
@@ -21,24 +22,32 @@ void UABAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	Super::NativeUpdateAnimation(DeltaSeconds);
 
 	auto Pawn = TryGetPawnOwner();
-	
-	if (::IsValid(Pawn))
-	{
-		CurrentPawnSpeed = Pawn->GetVelocity().Size();
+	if (!::IsValid(Pawn)) return;
 
-		auto Character = Cast<ACharacter>(Pawn);
-		if (Character)
-			IsInAir = Character->GetMovementComponent()->IsFalling();
+
+	if (!IsDead)
+	{
+		if (::IsValid(Pawn))
+		{
+			CurrentPawnSpeed = Pawn->GetVelocity().Size();
+
+			auto Character = Cast<ACharacter>(Pawn);
+			if (Character)
+				IsInAir = Character->GetMovementComponent()->IsFalling();
+		}
 	}
+	
 }
 
 void UABAnimInstance::PlayAttackMontage()
 {
+	ABCHECK(!IsDead);
 	Montage_Play(AttackMontage, 1.0f);
 }
 
 void UABAnimInstance::JumpToAttackMontageSection(int32 NewSection)
 {
+	ABCHECK(!IsDead);
 	ABCHECK(Montage_IsPlaying(AttackMontage));
 	// if (Montage_IsPlaying(AttackMontage)) return;
 	

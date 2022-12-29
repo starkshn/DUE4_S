@@ -4,6 +4,7 @@
 #include "ABCharacter.h"
 #include "ABAnimInstance.h"
 #include "DrawDebugHelpers.h"
+#include "ABWeapon.h"
 
 // Sets default values
 AABCharacter::AABCharacter()
@@ -62,6 +63,15 @@ AABCharacter::AABCharacter()
 void AABCharacter::BeginPlay()
 {
 	Super::BeginPlay();	
+
+	// Actor Weapon 장착하기
+	FName WeaponSocket(TEXT("hand_rSocket"));
+	auto CurWeapon = GetWorld()->SpawnActor<AABWeapon>(FVector::ZeroVector, FRotator::ZeroRotator);
+
+	if (nullptr != CurWeapon)
+	{
+		CurWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponSocket);
+	}
 }
 
 void AABCharacter::PostInitializeComponents()
@@ -92,6 +102,21 @@ void AABCharacter::PostInitializeComponents()
 
 	// New Trace Channel을 통해 충돌 검사하는 부분.
 	ABAnim->OnAttackHitCheck.AddUObject(this, &AABCharacter::AttackCheck);
+}
+
+float AABCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+	float FinalDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+
+	ABLOG(Warning, TEXT("Actor : %s took Damage : %f"), *GetName(), FinalDamage);
+
+	if (FinalDamage > 0.f)
+	{
+		ABAnim->SetDeadAnim();
+		SetActorEnableCollision(false);
+	}
+
+	return FinalDamage;
 }
 
 void AABCharacter::SetControlMode(int32 ControlMode)
@@ -206,6 +231,25 @@ void AABCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 
 	// Attack
 	PlayerInputComponent->BindAction(TEXT("Attack"), EInputEvent::IE_Pressed, this, &AABCharacter::Attack);
+}
+
+bool AABCharacter::CanSetWeapon()
+{
+	// true 또는 false가 반한되는 것임
+	// == 연산자가 비교연산자 이기때문에
+	return nullptr == CurrentWeapon;
+}
+
+void AABCharacter::SetWeapon(AABWeapon* NewWeapon)
+{
+	ABCHECK(nullptr != NewWeapon && nullptr == CurrentWeapon);
+	FName WeaponSocket(TEXT("hand_rSocket"));
+	if (nullptr != NewWeapon)
+	{
+		NewWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, WeaponSocket);
+		NewWeapon->SetOwner(this);
+		CurrentWeapon = NewWeapon;
+	}
 }
 
 void AABCharacter::UpDown(float NewAxisValue)
@@ -340,7 +384,7 @@ void AABCharacter::AttackCheck()
 		Params
 	);
 
-//#if ENALBE_DRAW_DEBUG
+#// if ENALBE_DRAW_DEBUG
 
 	FVector TraceVec = GetActorForwardVector() * AttackRange;
 	FVector Center = GetActorLocation() + TraceVec * 0.5f;
@@ -361,7 +405,7 @@ void AABCharacter::AttackCheck()
 		DebugLifeTime
 	);
 
-//#endif
+// #endif
 
 	if (bResult)
 	{
@@ -369,6 +413,10 @@ void AABCharacter::AttackCheck()
 		{
 			ABLOG(Warning, TEXT("Hit Actor Name : %s"), *HitResult.Actor->GetName());
 		}
+
+		// Attack Damage
+		FDamageEvent DamageEvent;
+		HitResult.Actor->TakeDamage(50.f, DamageEvent, GetController(), this);
 	}
 }
 

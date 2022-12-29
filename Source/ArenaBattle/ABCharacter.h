@@ -19,6 +19,7 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 	virtual void PostInitializeComponents() override;
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 
 	void SetControlMode(int32 ControlMode);
 
@@ -45,6 +46,14 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	/*UPROPERTY(VisibleAnywhere, Category=Weapon)
+	USkeletalMeshComponent* Weapon;*/
+
+	bool CanSetWeapon();
+	void SetWeapon(class AABWeapon* NewWeapon);
+	UPROPERTY(VisibleAnywhere, Category=Weapon)
+	class AABWeapon* CurrentWeapon;
+	
 	UPROPERTY(VisibleAnywhere, Category = Camera)
 	USpringArmComponent* SpringArm;
 
