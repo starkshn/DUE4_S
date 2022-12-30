@@ -8,7 +8,6 @@
 // Sets default values
 AABItenBox::AABItenBox()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
 
 	Trigger = CreateDefaultSubobject<UBoxComponent>(TEXT("TRIGGER"));
@@ -31,7 +30,7 @@ AABItenBox::AABItenBox()
 	if (P_CHESTOPEN.Succeeded())
 	{
 		Effect->SetTemplate(P_CHESTOPEN.Object);
-		Effect->bAffectDistanceFieldLighting = false;
+		Effect->bAutoActivate = false;
 	}
 
 	Box->SetRelativeLocation(FVector(0.f, -3.5f, -30.f));
@@ -41,7 +40,6 @@ AABItenBox::AABItenBox()
 
 	// Weapon
 	WeaponItemClass = AABWeapon::StaticClass();
-
 }
 
 // Called when the game starts or when spawned
@@ -66,19 +64,28 @@ void AABItenBox::OnCharacterOverlap(UPrimitiveComponent* OveralppedComp, AActor*
 
 	if (nullptr != ABCharacter && nullptr != WeaponItemClass)
 	{
-		if (ABCharacter->CanSetWeapon())
+		auto NewWeapon = GetWorld()->SpawnActor<AABWeapon>(WeaponItemClass, FVector::ZeroVector, FRotator::ZeroRotator);
+		ABCharacter->SetWeapon(NewWeapon);
+
+		Effect->Activate(true);
+		Box->SetHiddenInGame(true, true);
+		SetActorEnableCollision(false);
+		Effect->OnSystemFinished.AddDynamic(this, &AABItenBox::OnEffectFinished);
+
+		/*if (ABCharacter->CanSetWeapon())
 		{
 			auto NewWeapon = GetWorld()->SpawnActor<AABWeapon>(WeaponItemClass, FVector::ZeroVector, FRotator::ZeroRotator);
 			ABCharacter->SetWeapon(NewWeapon);
 
 			Effect->Activate(true);
-			Box->SetHiddenInGame(false);
+			Box->SetHiddenInGame(true, true);
+			SetActorEnableCollision(false);
 			Effect->OnSystemFinished.AddDynamic(this, &AABItenBox::OnEffectFinished);
 		}
 		else
 		{
 			ABLOG(Warning, TEXT("%s can't equip weapon currently."), *ABCharacter->GetName());
-		}
+		}*/
 	}
 }
 
