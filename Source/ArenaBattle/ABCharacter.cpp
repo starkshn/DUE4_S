@@ -5,6 +5,7 @@
 #include "ABAnimInstance.h"
 #include "DrawDebugHelpers.h"
 #include "ABWeapon.h"
+#include "ABCharacterStatComponent.h"
 
 // Sets default values
 AABCharacter::AABCharacter()
@@ -14,7 +15,7 @@ AABCharacter::AABCharacter()
 
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SPRINGARM"));
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("CAMERA"));
-	/*CharacterStat = CreateDefaultSubobject<UABCharacterStatComponent>(TEXT("CHARACTERSTAT"));*/
+	CharacterStat = CreateDefaultSubobject<UABCharacterStatComponent>(TEXT("CHARACTERSTAT"));
 
 	SpringArm->SetupAttachment(GetCapsuleComponent());
 	Camera->SetupAttachment(SpringArm);
