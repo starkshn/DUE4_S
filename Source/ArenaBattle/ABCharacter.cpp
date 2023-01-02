@@ -6,6 +6,8 @@
 #include "DrawDebugHelpers.h"
 #include "ABWeapon.h"
 #include "ABCharacterStatComponent.h"
+#include "Components/WidgetComponent.h"
+#include "ABCharacterWidget.h"
 
 // Sets default values
 AABCharacter::AABCharacter()
@@ -16,14 +18,26 @@ AABCharacter::AABCharacter()
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SPRINGARM"));
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("CAMERA"));
 	CharacterStat = CreateDefaultSubobject<UABCharacterStatComponent>(TEXT("CHARACTERSTAT"));
+	HPBarWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("HPBARWIDGET"));
+
 
 	SpringArm->SetupAttachment(GetCapsuleComponent());
 	Camera->SetupAttachment(SpringArm);
+	HPBarWidget->SetupAttachment(GetMesh());
 	
 	GetMesh()->SetRelativeLocationAndRotation(FVector(0.f, 0.f, -88.f), FRotator(0.f, -90.f, 0.f));
 	SpringArm->TargetArmLength = 400.f;
 	SpringArm->SetRelativeRotation(FRotator(-15.f, 0.f, 0.f));
-	
+	HPBarWidget->SetRelativeLocation(FVector(0.f, 0.f, 180.f));
+	HPBarWidget->SetWidgetSpace(EWidgetSpace::Screen);
+	static ConstructorHelpers::FClassFinder<UUserWidget> UI_HUD(TEXT("WidgetBlueprint'/Game/UI/UI_HPBar.UI_HPBar_C'"));
+	if (UI_HUD.Succeeded())
+	{
+		HPBarWidget->SetWidgetClass(UI_HUD.Class);
+		HPBarWidget->SetDrawSize(FVector2D(150.f, 50.f));
+	}
+
+
 	static ConstructorHelpers::FObjectFinder<USkeletalMesh>SK_CARDBOARD(TEXT("SkeletalMesh'/Game/InfinityBladeWarriors/Character/CompleteCharacters/SK_CharM_Cardboard.SK_CharM_Cardboard'"));
 
 	if (SK_CARDBOARD.Succeeded())
@@ -59,6 +73,9 @@ AABCharacter::AABCharacter()
 	// DrawDebug
 	AttackRange = 200.f;
 	AttackRadius = 50.f;
+
+	// UI
+
 }
 
 // Called when the game starts or when spawned
@@ -73,6 +90,13 @@ void AABCharacter::BeginPlay()
 	if (nullptr != CurrentWeapon)
 	{
 		CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponSocket);
+	}
+
+	// Widget 초기화 시점 변경됨
+	auto CharacterWidget = Cast<UABCharacterWidget>(HPBarWidget->GetUserWidgetObject());
+	if (nullptr != CharacterWidget)
+	{
+		CharacterWidget->BindCharacterStat(CharacterStat);
 	}
 }
 
@@ -104,6 +128,16 @@ void AABCharacter::PostInitializeComponents()
 
 	// New Trace Channel을 통해 충돌 검사하는 부분.
 	ABAnim->OnAttackHitCheck.AddUObject(this, &AABCharacter::AttackCheck);
+
+	CharacterStat->OnHPIsZero.AddLambda
+	(
+		[this]() -> void
+		{
+			ABLOG(Warning, TEXT("OnHPIsZero"));
+			ABAnim->SetDeadAnim();
+			SetActorEnableCollision(false);
+		}
+	);
 }
 
 float AABCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
@@ -112,11 +146,7 @@ float AABCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEve
 
 	ABLOG(Warning, TEXT("Actor : %s took Damage : %f"), *GetName(), FinalDamage);
 
-	if (FinalDamage > 0.f)
-	{
-		ABAnim->SetDeadAnim();
-		SetActorEnableCollision(false);
-	}
+	CharacterStat->SetDamage(FinalDamage);
 
 	return FinalDamage;
 }
@@ -418,7 +448,7 @@ void AABCharacter::AttackCheck()
 
 		// Attack Damage
 		FDamageEvent DamageEvent;
-		HitResult.Actor->TakeDamage(50.f, DamageEvent, GetController(), this);
+		HitResult.Actor->TakeDamage(CharacterStat->GetAttack(), DamageEvent, GetController(), this);
 	}
 }
 
