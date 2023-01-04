@@ -20,6 +20,7 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void PostInitializeComponents() override;
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
+	virtual void PossessedBy(AController* NewController) override;
 
 	void SetControlMode(int32 ControlMode);
 
@@ -27,6 +28,7 @@ protected:
 	{
 		GTA,
 		DIABLO,
+		NPC,
 	};
 
 	void SetControlMode(EControlMode NewControlMode);
@@ -110,7 +112,6 @@ private:
 	// 콤보 카운터의 최대치
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
 	int32 MaxCombo;
-
 
 	UPROPERTY()
 	class UABAnimInstance* ABAnim;

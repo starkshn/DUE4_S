@@ -8,6 +8,7 @@
 #include "ABCharacterStatComponent.h"
 #include "Components/WidgetComponent.h"
 #include "ABCharacterWidget.h"
+#include "ABAIController.h"
 
 // Sets default values
 AABCharacter::AABCharacter()
@@ -36,8 +37,7 @@ AABCharacter::AABCharacter()
 		HPBarWidget->SetWidgetClass(UI_HUD.Class);
 		HPBarWidget->SetDrawSize(FVector2D(150.f, 50.f));
 	}
-
-
+	
 	static ConstructorHelpers::FObjectFinder<USkeletalMesh>SK_CARDBOARD(TEXT("SkeletalMesh'/Game/InfinityBladeWarriors/Character/CompleteCharacters/SK_CharM_Cardboard.SK_CharM_Cardboard'"));
 
 	if (SK_CARDBOARD.Succeeded())
@@ -76,6 +76,9 @@ AABCharacter::AABCharacter()
 
 	// UI
 
+	// AI
+	AIControllerClass = AABAIController::StaticClass();
+	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 }
 
 // Called when the game starts or when spawned
@@ -151,6 +154,22 @@ float AABCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEve
 	return FinalDamage;
 }
 
+void AABCharacter::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+
+	if (IsPlayerControlled())
+	{
+		SetControlMode(EControlMode::GTA);
+		GetCharacterMovement()->MaxWalkSpeed = 600.f;
+	}
+	else
+	{
+		SetControlMode(EControlMode::NPC);
+		GetCharacterMovement()->MaxWalkSpeed = 300.f;
+	}
+}
+
 void AABCharacter::SetControlMode(int32 ControlMode)
 {
 	if (ControlMode == 0)
@@ -207,7 +226,16 @@ void AABCharacter::SetControlMode(EControlMode NewControlMode)
 			GetCharacterMovement()->RotationRate = FRotator(0.f, 720.f, 0.f);
 		}
 		break;
+	case EControlMode::NPC:
+		{
+			bUseControllerRotationYaw = false;
+			GetCharacterMovement()->bUseControllerDesiredRotation = false;
+			GetCharacterMovement()->bOrientRotationToMovement = true;
+			GetCharacterMovement()->RotationRate = FRotator(0.f, 480.f, 0.f);
+		}
+		break;
 	}
+	
 }
 
 // Called every frame
@@ -423,7 +451,7 @@ void AABCharacter::AttackCheck()
 	float HalfHeight = AttackRange * 0.5f + AttackRadius;
 	FQuat CapsuleRot = FRotationMatrix::MakeFromZ(TraceVec).ToQuat();
 	FColor DrawColor = bResult ? FColor::Green : FColor::Red;
-	float DebugLifeTime = 5.0f;
+	float DebugLifeTime = 2.0f;
 
 	DrawDebugCapsule
 	(

@@ -4,6 +4,8 @@
 #include "ABAnimInstance.h"
 #include "ABCharacter.h"
 
+bool UABAnimInstance::IsDeadD = false;
+
 UABAnimInstance::UABAnimInstance()
 {
 	CurrentPawnSpeed = 0.f;
@@ -24,7 +26,6 @@ void UABAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	auto Pawn = TryGetPawnOwner();
 	if (!::IsValid(Pawn)) return;
 
-
 	if (!IsDead)
 	{
 		if (::IsValid(Pawn))
@@ -35,8 +36,7 @@ void UABAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 			if (Character)
 				IsInAir = Character->GetMovementComponent()->IsFalling();
 		}
-	}
-	
+	}	
 }
 
 void UABAnimInstance::PlayAttackMontage()

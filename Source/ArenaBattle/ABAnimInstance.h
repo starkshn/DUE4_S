@@ -32,9 +32,13 @@ public:
 
 	FOnNextAttackCheckDelegate OnNextAttackCheck;
 	FOnAttackHitCheckDelegate OnAttackHitCheck;	
-	void SetDeadAnim() { IsDead = true; }
+	void SetDeadAnim() { IsDead = true; IsDeadD = true; }
 
 	FName GetAttackMontageSectionName(int32 Section);
+
+public:
+	static bool GetDeadAnim() { return IsDeadD; }
+	static bool IsDeadD;
 
 private:
 	// Notify
