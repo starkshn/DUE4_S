@@ -6,6 +6,8 @@
 #include "GameFramework/Character.h"
 #include "ABCharacter.generated.h"
 
+DECLARE_MULTICAST_DELEGATE(FOnAttackEndDelegate);
+
 UCLASS()
 class ARENABATTLE_API AABCharacter : public ACharacter
 {
@@ -68,6 +70,10 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = UI)
 	class UWidgetComponent* HPBarWidget;
 	
+public:
+	// Attack
+	void Attack();
+	FOnAttackEndDelegate OnAttackEnd;
 
 private:
 	void UpDown(float NewAxisValue);
@@ -77,9 +83,6 @@ private:
 
 	// View Change
 	void ViewChange();
-
-	// Attack
-	void Attack();
 
 	// AttackCheck
 	void AttackCheck();

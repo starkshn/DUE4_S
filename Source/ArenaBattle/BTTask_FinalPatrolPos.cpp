@@ -4,7 +4,7 @@
 #include "BTTask_FinalPatrolPos.h"
 #include "ABAIController.h"
 #include "BehaviorTree/BlackboardComponent.h"
-#include <NavigationSystem.h>
+#include "NavigationSystem.h"
 
 UBTTask_FinalPatrolPos::UBTTask_FinalPatrolPos()
 {
