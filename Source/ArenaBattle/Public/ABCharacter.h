@@ -129,7 +129,6 @@ private:
 private:
 	void OnAssetLoadCompleted();
 
-private:
 	FSoftObjectPath CharacterAssetToLoad = FSoftObjectPath(nullptr);
 	TSharedPtr<struct FStreamableHandle> AssetStreamingHandle;
 		

@@ -91,8 +91,6 @@ AABCharacter::AABCharacter()
 			ABLOG(Warning, TEXT("Character Asset : %s"), *CharacterAsset.ToString());
 		}
 	}*/
-
-	
 }
 
 // Called when the game starts or when spawned
@@ -116,6 +114,7 @@ void AABCharacter::BeginPlay()
 		CharacterWidget->BindCharacterStat(CharacterStat);
 	}
 
+	// Module
 	if (!IsPlayerControlled())
 	{
 		auto DefaultSetting = GetDefault<UABCharacterSetting>();
@@ -125,7 +124,10 @@ void AABCharacter::BeginPlay()
 		auto ABGameInstance = Cast<UABGameInstance>(GetGameInstance());
 		if (nullptr != ABGameInstance)
 		{
-			AssetStreamingHandle = ABGameInstance->StreamableManager.RequestAsyncLoad(CharacterAssetToLoad, FStreamableDelegate::CreateUObject(this, &AABCharacter::OnAssetLoadCompleted));
+			AssetStreamingHandle = ABGameInstance->StreamableManager.RequestAsyncLoad
+			(
+				CharacterAssetToLoad, FStreamableDelegate::CreateUObject(this, &AABCharacter::OnAssetLoadCompleted)
+			);
 		}
 	}
 }
