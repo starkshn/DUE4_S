@@ -33,6 +33,14 @@ private:
 
 	void OperateGate(bool bOpen = true);
 
+	UFUNCTION()
+	void OnTriggerBeginOverlap(UPrimitiveComponent* OveralppedComponent, AActor* OtherACtor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	UFUNCTION()
+	void OnGateTriggerBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	void OnNPCSpawn();
+
 private:
 	UPROPERTY(VisibleAnywhere, Category = Mesh, Meta =(AllowPrivateAccess=true))
 	UStaticMeshComponent* Mesh;
@@ -49,4 +57,14 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = State, Meta = (AllowPRivateAccess = true))
 	bool bNoBattle;
+
+	UPROPERTY(EditAnywhere, Category = Spawn, Meta = (AllowPrivateAccess = true))
+	float EnemySpawnTime;
+	
+	UPROPERTY(EditAnywhere, Category = Spawn, Meta = (AllowPrivateAccess = true))
+	float ItemBoxSpawnTime;
+	
+	FTimerHandle SpawnNPCTimerHandle = {};
+	FTimerHandle SpawnItemBoxTimerHandle = {};
+	
 };
