@@ -16,6 +16,11 @@ class ARENABATTLE_API AABCharacter : public ACharacter
 public:
 	// Sets default values for this character's properties
 	AABCharacter();
+	void SetCharacterState(ECharacterState NewState);
+	ECharacterState GetChracterState() const;
+
+private:
+	int32 AssetIndex;
 
 protected:
 	// Called when the game starts or when spawned
@@ -69,6 +74,18 @@ public:
 
 	UPROPERTY(VisibleAnywhere, Category = UI)
 	class UWidgetComponent* HPBarWidget;
+
+	UPROPERTY(Transient, VisibleInstanceOnly, BlueprintReadOnly, Category = State, Meta = (AllowPrivateAccess = true))
+	ECharacterState CurrentState;
+	
+	UPROPERTY(Transient, VisibleInstanceOnly, BlueprintReadOnly, Category = State, Meta = (AllowPrivateAccess = true))
+	bool bIsPlayer;
+	
+	UPROPERTY()
+	class AABAIController* ABAIController;
+
+	UPROPERTY()
+	class AABPlayerController* ABPlayerController;
 	
 public:
 	// Attack

@@ -85,6 +85,16 @@ AABCharacter::AABCharacter()
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 }
 
+void AABCharacter::SetCharacterState(ECharacterState NewState)
+{
+}
+
+ECharacterState AABCharacter::GetChracterState() const
+{
+
+	return ECharacterState();
+}
+
 // Called when the game starts or when spawned
 void AABCharacter::BeginPlay()
 {
