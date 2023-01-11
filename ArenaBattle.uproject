@@ -23,5 +23,11 @@
 				"ArenaBattle"
 			]
 		}
+	],
+	"Plugins": [
+		{
+			"Name": "DisasterRecoveryClient",
+			"Enabled": true
+		}
 	]
 }

@@ -33,7 +33,7 @@ void UABCharacterStatComponent::SetNewLevel(int32 NewLevel)
 {
 	auto ABGameInstance = Cast<UABGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
 
-	ABCHECK(nullptr != ABGameInstance);
+	// ABCHECK(nullptr != ABGameInstance);
 	CurrentStatData = ABGameInstance->GetABCharacterData(NewLevel);
 	if (nullptr != CurrentStatData)
 	{

@@ -11,6 +11,7 @@
 #include "ABAIController.h"
 #include "ABCharacterSetting.h"
 #include "ABGameInstance.h"
+#include "ABPlayerController.h"
 
 // Sets default values
 AABCharacter::AABCharacter()
@@ -83,16 +84,100 @@ AABCharacter::AABCharacter()
 	// AI
 	AIControllerClass = AABAIController::StaticClass();
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
+
+	// GameState
+	AssetIndex = 4;
+
+	SetActorHiddenInGame(true);
+	HPBarWidget->SetHiddenInGame(true);
+	SetCanBeDamaged(false);
+	// bCanbeDamaged에서 변경됨.
+
+	DeadTimer = 5.f;
 }
 
 void AABCharacter::SetCharacterState(ECharacterState NewState)
 {
+	ABCHECK(CurrentState != NewState);
+	CurrentState = NewState;
+	switch (CurrentState)
+	{
+		case ECharacterState::LOADING:
+		{
+			if (bIsPlayer)
+				DisableInput(ABPlayerController);
+
+			SetActorHiddenInGame(true);
+			HPBarWidget->SetHiddenInGame(true);
+			SetCanBeDamaged(false);
+			break;
+		}
+		case ECharacterState::READY:
+		{
+			SetActorHiddenInGame(false);
+			HPBarWidget->SetHiddenInGame(false);
+			SetCanBeDamaged(true);
+			
+			CharacterStat->OnHPIsZero.AddLambda
+			(
+				[this]() -> void { SetCharacterState(ECharacterState::DEAD); }
+			);
+
+			auto CharacterWidget = Cast<UABCharacterWidget>(HPBarWidget->GetUserWidgetObject());
+			ABCHECK(nullptr != CharacterWidget);
+			CharacterWidget->BindCharacterStat(CharacterStat);
+
+			if (bIsPlayer)
+			{
+				SetControlMode(EControlMode::GTA);
+				GetCharacterMovement()->MaxWalkSpeed = 600.f;
+				EnableInput(ABPlayerController);
+			}
+			else
+			{
+				SetControlMode(EControlMode::NPC);
+				GetCharacterMovement()->MaxWalkSpeed = 300.f;
+				ABAIController->RunAI();
+			}
+
+			break;
+		}
+		case ECharacterState::DEAD:
+		{
+			SetActorEnableCollision(false);
+			GetMesh()->SetHiddenInGame(false);
+			HPBarWidget->SetHiddenInGame(true);
+			ABAnim->SetDeadAnim();
+			SetCanBeDamaged(false);
+
+			if (bIsPlayer)
+			{
+				DisableInput(ABPlayerController);
+			}
+			else
+			{
+				ABAIController->StopAI();
+			}
+
+			GetWorld()->GetTimerManager().SetTimer(DeadTimerHandle, FTimerDelegate::CreateLambda
+			(
+				[this]() -> void
+				{
+					if (bIsPlayer) 
+						ABPlayerController->RestartLevel();
+					else 
+						Destroy();
+				}
+			), DeadTimer, false);
+
+			break;
+		}
+	}	
 }
 
 ECharacterState AABCharacter::GetChracterState() const
 {
-
-	return ECharacterState();
+	return CurrentState;
 }
 
 // Called when the game starts or when spawned
@@ -132,6 +217,36 @@ void AABCharacter::BeginPlay()
 			);
 		}
 	}
+
+	// GameState
+	bIsPlayer = IsPlayerControlled();
+	if (bIsPlayer)
+	{
+		ABPlayerController = Cast<AABPlayerController>(GetController());
+		ABCHECK(nullptr != ABPlayerController);
+	}
+	else
+	{
+		ABAIController = Cast<AABAIController>(GetController());
+		ABCHECK(nullptr != ABAIController);
+	}
+
+	auto DefaultSetting = GetDefault<UABCharacterSetting>();
+
+	if (bIsPlayer)
+	{
+		AssetIndex = 4;
+	}
+	else
+	{
+		AssetIndex = FMath::RandRange(0, DefaultSetting->CharacterAssets.Num() - 1);
+	}
+
+	CharacterAssetToLoad = DefaultSetting->CharacterAssets[AssetIndex];
+	auto ABGameInstance = Cast<UABGameInstance>(GetGameInstance());
+	ABCHECK(nullptr != ABGameInstance);
+	AssetStreamingHandle = ABGameInstance->StreamableManager.RequestAsyncLoad(CharacterAssetToLoad, FStreamableDelegate::CreateUObject(this, &AABCharacter::OnAssetLoadCompleted));
+	SetCharacterState(ECharacterState::LOADING);
 }
 
 void AABCharacter::OnAssetLoadCompleted()
@@ -139,21 +254,28 @@ void AABCharacter::OnAssetLoadCompleted()
 	USkeletalMesh* AssetLoaded = Cast<USkeletalMesh>(AssetStreamingHandle->GetLoadedAsset());
 
 	AssetStreamingHandle.Reset();
+	ABCHECK(nullptr != AssetLoaded);
+
 	if (nullptr != AssetLoaded)
 	{
 		GetMesh()->SetSkeletalMesh(AssetLoaded);
-	}
-}
 
+		SetCharacterState(ECharacterState::READY);
+	}
+
+}
 
 void AABCharacter::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
 
 	ABAnim = Cast<UABAnimInstance>(GetMesh()->GetAnimInstance());
+	ABCHECK(nullptr != ABAnim);
+
+	ABAnim->OnAttackHitCheck.AddUObject(this, &AABCharacter::AttackCheck);
+
 	if (nullptr != ABAnim)
 	{
-		// OnMontageEnded는 멀티 캐스트 delegate이다.
 		ABAnim->OnMontageEnded.AddDynamic(this, &AABCharacter::OnAttackMontageEnded);
 	}
 

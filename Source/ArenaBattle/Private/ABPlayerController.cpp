@@ -11,8 +11,8 @@ void AABPlayerController::PostInitializeComponents()
 
 void AABPlayerController::OnPossess(APawn* InPawn)
 {
-	ABLOG_S(Warning);
 	Super::OnPossess(InPawn);
+	ABLOG_S(Warning);
 }
 
 // 플레이시 뷰포트 클릭 생략

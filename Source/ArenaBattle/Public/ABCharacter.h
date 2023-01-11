@@ -20,7 +20,7 @@ public:
 	ECharacterState GetChracterState() const;
 
 private:
-	int32 AssetIndex;
+	int32 AssetIndex = 0;
 
 protected:
 	// Called when the game starts or when spawned
@@ -142,11 +142,15 @@ private:
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
 	float AttackRadius;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = State, Meta = (AllowPrivateAccess = true))
+	float DeadTimer;
+
+	FTimerHandle DeadTimerHandle = {};
+
 // Module
 private:
 	void OnAssetLoadCompleted();
 
 	FSoftObjectPath CharacterAssetToLoad = FSoftObjectPath(nullptr);
 	TSharedPtr<struct FStreamableHandle> AssetStreamingHandle;
-		
 };

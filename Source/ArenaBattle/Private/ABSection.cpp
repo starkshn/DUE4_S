@@ -88,8 +88,6 @@ void AABSection::OnConstruction(const FTransform& Transform)
 
 void AABSection::SetState(ESectionState NewState)
 {
-	ABLOG(Error, TEXT("SetState : %d"), NewState);
-
 	switch (NewState)
 	{
 	case ESectionState::READY:
