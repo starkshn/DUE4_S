@@ -16,7 +16,6 @@ const FName AABAIController::TargetKey(TEXT("Target"));
 
 AABAIController::AABAIController()
 {
-	/*RepeatInterval = 3.0f;*/
 	static ConstructorHelpers::FObjectFinder<UBlackboardData> BBObject(TEXT("BlackboardData'/Game/AI/BB_ABCharacter.BB_ABCharacter'"));
 	if (BBObject.Succeeded())
 	{

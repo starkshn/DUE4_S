@@ -40,7 +40,6 @@ class ARENABATTLE_API UABGameInstance : public UGameInstance
 {
 	GENERATED_BODY()
 	
-	
 public:
 	UABGameInstance();
 

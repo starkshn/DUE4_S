@@ -2,6 +2,17 @@
 
 
 #include "ABPlayerController.h"
+#include "ABHUDWidget.h"
+#include "ABPlayerState.h"
+
+AABPlayerController::AABPlayerController()
+{
+	static ConstructorHelpers::FClassFinder<UABHUDWidget> UI_HUD_C(TEXT("WidgetBlueprint'/Game/Book/UI/UI_HUD.UI_HUD_C'"));
+	if (UI_HUD_C.Succeeded())
+	{
+		HUDWidgetClass = UI_HUD_C.Class;
+	}
+}
 
 void AABPlayerController::PostInitializeComponents()
 {
@@ -15,6 +26,11 @@ void AABPlayerController::OnPossess(APawn* InPawn)
 	ABLOG_S(Warning);
 }
 
+UABHUDWidget* AABPlayerController::GetHUDWidget() const
+{
+	return HUDWidget;
+}
+
 // 플레이시 뷰포트 클릭 생략
 // UI를 배제하고 게임에게만 입력을 전달하도록 하는 부분
 void AABPlayerController::BeginPlay()
@@ -23,4 +39,17 @@ void AABPlayerController::BeginPlay()
 
 	FInputModeGameOnly InputMode;
 	SetInputMode(InputMode);
+
+	HUDWidget = CreateWidget<UABHUDWidget>(this, HUDWidgetClass);
+	HUDWidget->AddToViewport();
+
+	auto ABPlayerState = Cast<AABPlayerState>(PlayerState);
+	ABCHECK(nullptr != ABPlayerState);
+	HUDWidget->BindPlayerState(ABPlayerState);
+	ABPlayerState->OnPlayerStateChanged.Broadcast();
+}
+
+void AABPlayerController::SetupInputComponent()
+{
+	Super::SetupInputComponent();
 }

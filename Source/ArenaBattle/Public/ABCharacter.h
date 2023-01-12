@@ -55,9 +55,6 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	/*UPROPERTY(VisibleAnywhere, Category=Weapon)
-	USkeletalMeshComponent* Weapon;*/
-
 	bool CanSetWeapon();
 	void SetWeapon(class AABWeapon* NewWeapon);
 	UPROPERTY(VisibleAnywhere, Category=Weapon)

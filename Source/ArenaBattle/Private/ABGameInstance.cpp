@@ -15,7 +15,7 @@ UABGameInstance::UABGameInstance()
 void UABGameInstance::Init()
 {
 	Super::Init();
-	ABLOG_S(Warning);
+	ABLOG(Warning, TEXT("DropExp of Level 20 ABCharacter : %d"), GetABCharacterData(20)->DropExp);
 
 	// 데이터 확인용 로그
 	// ABLOG(Warning, TEXT("DropExp of Level 20 ABCharacter : %d"), GetABCharacterData(20)->DropExp);
