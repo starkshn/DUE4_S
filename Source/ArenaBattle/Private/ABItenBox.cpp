@@ -71,7 +71,10 @@ void AABItenBox::OnCharacterOverlap(UPrimitiveComponent* OveralppedComp, AActor*
 		Box->SetHiddenInGame(true, true);
 		SetActorEnableCollision(false);
 		Effect->OnSystemFinished.AddDynamic(this, &AABItenBox::OnEffectFinished);
-
+	}
+	else
+	{
+		ABLOG(Warning, TEXT("%s can't equip weapon currently"), *ABCharacter->GetName());
 	}
 }
 

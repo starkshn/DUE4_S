@@ -32,7 +32,7 @@ AABAIController::AABAIController()
 
 void AABAIController::OnPossess(APawn* InPawn)
 {
-	Super::Possess(InPawn);
+	Super::OnPossess(InPawn);
 }
 
 void AABAIController::RunAI()

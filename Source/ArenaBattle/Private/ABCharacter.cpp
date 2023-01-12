@@ -20,6 +20,7 @@ AABCharacter::AABCharacter()
 	PrimaryActorTick.bCanEverTick = true;
 
 	RootComponent = GetCapsuleComponent();
+	GetCapsuleComponent()->SetCollisionProfileName(TEXT("ABCharacter"));
 
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SPRINGARM"));
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("CAMERA"));
@@ -31,7 +32,6 @@ AABCharacter::AABCharacter()
 	HPBarWidget->SetupAttachment(GetMesh());
 	
 	GetMesh()->SetRelativeLocationAndRotation(FVector(0.f, 0.f, -88.f), FRotator(0.f, -90.f, 0.f));
-	// GetMesh()->SetCollisionProfileName(TEXT("ABCharacter"));
 	SpringArm->TargetArmLength = 400.f;
 	SpringArm->SetRelativeRotation(FRotator(-15.f, 0.f, 0.f));
 	HPBarWidget->SetRelativeLocation(FVector(0.f, 0.f, 180.f));
@@ -72,9 +72,6 @@ AABCharacter::AABCharacter()
 	MaxCombo = 4;
 	AttackEndComboState();
 
-	// Collision Preset설정
-	GetCapsuleComponent()->SetCollisionProfileName(TEXT("ABCharacter"));
-
 	// DrawDebug
 	AttackRange = 200.f;
 	AttackRadius = 50.f;
@@ -100,18 +97,19 @@ void AABCharacter::SetCharacterState(ECharacterState NewState)
 {
 	ABCHECK(CurrentState != NewState);
 	CurrentState = NewState;
+
 	switch (CurrentState)
 	{
 		case ECharacterState::LOADING:
 		{
-			if (bIsPlayer)
+			if (bIsPlayer) 
 				DisableInput(ABPlayerController);
 
 			SetActorHiddenInGame(true);
 			HPBarWidget->SetHiddenInGame(true);
-			SetCanBeDamaged(false);
-			break;
+			SetCanBeDamaged(true);
 		}
+		break;
 		case ECharacterState::READY:
 		{
 			SetActorHiddenInGame(false);
@@ -120,7 +118,10 @@ void AABCharacter::SetCharacterState(ECharacterState NewState)
 			
 			CharacterStat->OnHPIsZero.AddLambda
 			(
-				[this]() -> void { SetCharacterState(ECharacterState::DEAD); }
+				[this]() -> void
+				{
+					SetCharacterState(ECharacterState::DEAD);
+				}
 			);
 
 			auto CharacterWidget = Cast<UABCharacterWidget>(HPBarWidget->GetUserWidgetObject());
@@ -139,9 +140,8 @@ void AABCharacter::SetCharacterState(ECharacterState NewState)
 				GetCharacterMovement()->MaxWalkSpeed = 300.f;
 				ABAIController->RunAI();
 			}
-
-			break;
 		}
+		break;
 		case ECharacterState::DEAD:
 		{
 			SetActorEnableCollision(false);
@@ -169,10 +169,10 @@ void AABCharacter::SetCharacterState(ECharacterState NewState)
 						Destroy();
 				}
 			), DeadTimer, false);
-
-			break;
 		}
-	}	
+		break;
+	}
+	return;
 }
 
 ECharacterState AABCharacter::GetChracterState() const
@@ -185,40 +185,6 @@ void AABCharacter::BeginPlay()
 {
 	Super::BeginPlay();	
 
-	// Actor Weapon 장착하기
-	FName WeaponSocket(TEXT("hand_rSocket"));
-	CurrentWeapon = GetWorld()->SpawnActor<AABWeapon>(FVector::ZeroVector, FRotator::ZeroRotator);
-
-	if (nullptr != CurrentWeapon)
-	{
-		CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponSocket);
-	}
-
-	// Widget 초기화 시점 변경됨
-	auto CharacterWidget = Cast<UABCharacterWidget>(HPBarWidget->GetUserWidgetObject());
-	if (nullptr != CharacterWidget)
-	{
-		CharacterWidget->BindCharacterStat(CharacterStat);
-	}
-
-	// Module
-	if (!IsPlayerControlled())
-	{
-		auto DefaultSetting = GetDefault<UABCharacterSetting>();
-		int32 RandIndex = FMath::RandRange(0, DefaultSetting->CharacterAssets.Num() - 1);
-		CharacterAssetToLoad = DefaultSetting->CharacterAssets[RandIndex];
-
-		auto ABGameInstance = Cast<UABGameInstance>(GetGameInstance());
-		if (nullptr != ABGameInstance)
-		{
-			AssetStreamingHandle = ABGameInstance->StreamableManager.RequestAsyncLoad
-			(
-				CharacterAssetToLoad, FStreamableDelegate::CreateUObject(this, &AABCharacter::OnAssetLoadCompleted)
-			);
-		}
-	}
-
-	// GameState
 	bIsPlayer = IsPlayerControlled();
 	if (bIsPlayer)
 	{
@@ -232,15 +198,9 @@ void AABCharacter::BeginPlay()
 	}
 
 	auto DefaultSetting = GetDefault<UABCharacterSetting>();
-
-	if (bIsPlayer)
-	{
-		AssetIndex = 4;
-	}
-	else
-	{
-		AssetIndex = FMath::RandRange(0, DefaultSetting->CharacterAssets.Num() - 1);
-	}
+	
+	if (bIsPlayer) AssetIndex = 4;
+	else AssetIndex = FMath::RandRange(0, DefaultSetting->CharacterAssets.Num() - 1);
 
 	CharacterAssetToLoad = DefaultSetting->CharacterAssets[AssetIndex];
 	auto ABGameInstance = Cast<UABGameInstance>(GetGameInstance());
@@ -252,17 +212,12 @@ void AABCharacter::BeginPlay()
 void AABCharacter::OnAssetLoadCompleted()
 {
 	USkeletalMesh* AssetLoaded = Cast<USkeletalMesh>(AssetStreamingHandle->GetLoadedAsset());
-
 	AssetStreamingHandle.Reset();
+
 	ABCHECK(nullptr != AssetLoaded);
 
-	if (nullptr != AssetLoaded)
-	{
-		GetMesh()->SetSkeletalMesh(AssetLoaded);
-
-		SetCharacterState(ECharacterState::READY);
-	}
-
+	GetMesh()->SetSkeletalMesh(AssetLoaded);
+	SetCharacterState(ECharacterState::READY);
 }
 
 void AABCharacter::PostInitializeComponents()
@@ -325,7 +280,7 @@ void AABCharacter::PossessedBy(AController* NewController)
 
 	if (IsPlayerControlled())
 	{
-		SetControlMode(EControlMode::GTA);
+		SetControlMode(EControlMode::DIABLO);
 		GetCharacterMovement()->MaxWalkSpeed = 600.f;
 	}
 	else
@@ -400,7 +355,6 @@ void AABCharacter::SetControlMode(EControlMode NewControlMode)
 		}
 		break;
 	}
-	
 }
 
 // Called every frame
@@ -412,7 +366,7 @@ void AABCharacter::Tick(float DeltaTime)
 
 	switch (CurrentControlMode)
 	{
-		case EControlMode::DIABLO:
+		case EControlMode::GTA:
 		{
 			SpringArm->SetRelativeRotation(FMath::RInterpTo(SpringArm->GetRelativeRotation(), ArmRotationTo, DeltaTime, ArmRotationSpeed));
 
@@ -467,7 +421,8 @@ bool AABCharacter::CanSetWeapon()
 
 void AABCharacter::SetWeapon(AABWeapon* NewWeapon)
 {
-	CurrentWeapon->Destroy();
+	// CurrentWeapon
+	ABCHECK(nullptr != NewWeapon && nullptr == CurrentWeapon);
 	FName WeaponSocket(TEXT("hand_rSocket"));
 	if (nullptr != NewWeapon)
 	{
