@@ -75,7 +75,7 @@ AABCharacter::AABCharacter()
 	AttackEndComboState();
 
 	// DrawDebug
-	AttackRange = 200.f;
+	AttackRange = 80.f;
 	AttackRadius = 50.f;
 
 	// UI
@@ -190,6 +190,16 @@ ECharacterState AABCharacter::GetChracterState() const
 	return CurrentState;
 }
 
+int32 AABCharacter::GetExp() const
+{
+	return CharacterStat->GetDropExp();
+}
+
+float AABCharacter::GetFinalAttackRange() const
+{
+	return (nullptr != CurrentWeapon) ? CurrentWeapon->GetAttackRange() : AttackRange;
+}
+
 // Called when the game starts or when spawned
 void AABCharacter::BeginPlay()
 {
@@ -277,10 +287,17 @@ float AABCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEve
 {
 	float FinalDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 
-	ABLOG(Warning, TEXT("Actor : %s took Damage : %f"), *GetName(), FinalDamage);
-
 	CharacterStat->SetDamage(FinalDamage);
 
+	if (CurrentState == ECharacterState::DEAD)
+	{
+		if (EventInstigator->IsPlayerController())
+		{
+			auto PlayerController = Cast<AABPlayerController>(EventInstigator);
+			ABCHECK(nullptr != PlayerController, 0.0f);
+			PlayerController->NPCKill(this);
+		}
+	}
 	return FinalDamage;
 }
 
@@ -424,15 +441,20 @@ void AABCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 
 bool AABCharacter::CanSetWeapon()
 {
-	// true 또는 false가 반한되는 것임
-	// == 연산자가 비교연산자 이기때문에
-	return nullptr == CurrentWeapon;
+	return true;
 }
 
 void AABCharacter::SetWeapon(AABWeapon* NewWeapon)
 {
-	// CurrentWeapon
-	ABCHECK(nullptr != NewWeapon && nullptr == CurrentWeapon);
+	ABCHECK(nullptr != NewWeapon);
+	
+	if (nullptr != CurrentWeapon)
+	{
+		CurrentWeapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+		CurrentWeapon->Destroy();
+		CurrentWeapon = nullptr;
+	}
+
 	FName WeaponSocket(TEXT("hand_rSocket"));
 	if (nullptr != NewWeapon)
 	{
@@ -561,13 +583,15 @@ void AABCharacter::Attack()
 
 void AABCharacter::AttackCheck()
 {
+	float FinalAttackRange = GetFinalAttackRange();
+
 	FHitResult HitResult;
 	FCollisionQueryParams Params(NAME_None, false, this);
 	bool bResult = GetWorld()->SweepSingleByChannel
 	(
 		HitResult,
 		GetActorLocation(),
-		GetActorLocation() + GetActorForwardVector() * AttackRange,
+		GetActorLocation() + GetActorForwardVector() * FinalAttackRange,
 		FQuat::Identity,
 		ECollisionChannel::ECC_GameTraceChannel2,
 		FCollisionShape::MakeSphere(AttackRadius),
@@ -576,9 +600,9 @@ void AABCharacter::AttackCheck()
 
 #// if ENALBE_DRAW_DEBUG
 
-	FVector TraceVec = GetActorForwardVector() * AttackRange;
+	FVector TraceVec = GetActorForwardVector() * FinalAttackRange;
 	FVector Center = GetActorLocation() + TraceVec * 0.5f;
-	float HalfHeight = AttackRange * 0.5f + AttackRadius;
+	float HalfHeight = FinalAttackRange * 0.5f + AttackRadius;
 	FQuat CapsuleRot = FRotationMatrix::MakeFromZ(TraceVec).ToQuat();
 	FColor DrawColor = bResult ? FColor::Green : FColor::Red;
 	float DebugLifeTime = 2.0f;

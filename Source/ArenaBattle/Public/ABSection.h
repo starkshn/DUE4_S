@@ -41,6 +41,9 @@ private:
 
 	void OnNPCSpawn();
 
+	UFUNCTION()
+	void OnKeyNPCDestroyed(AActor* DestroyActor);
+
 private:
 	UPROPERTY(VisibleAnywhere, Category = Mesh, Meta =(AllowPrivateAccess=true))
 	UStaticMeshComponent* Mesh;

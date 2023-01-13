@@ -20,9 +20,17 @@ public:
 	AABPlayerState();
 
 	int32 GetGameScore() const;
+	int32 GetGameHighScore() const;
 	int32 GetCharacterLevel() const;
+	float GetExpRatio() const;
+	
+	bool AddExp(int32 IncomeExp);
+	void AddGameScore();
+
+	FString SaveSlotName;
 
 	void InitPlayerData();
+	void SavePlayerData();
 
 	FOnPlayerStateChangedDelegate OnPlayerStateChanged;
 
@@ -32,4 +40,14 @@ protected:
 
 	UPROPERTY(Transient)
 	int32 CharacterLevel;
+
+	UPROPERTY(Transient)
+	int32 Exp;
+
+	UPROPERTY(Transient)
+	int32 GameHighScore;
+
+private:
+	void SetCharacterLevel(int32 NewCharacterLevel);
+	struct FABCharacterData* CurrentStatData;
 };

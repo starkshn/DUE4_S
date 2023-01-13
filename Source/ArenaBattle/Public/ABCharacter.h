@@ -19,6 +19,9 @@ public:
 	void SetCharacterState(ECharacterState NewState);
 	ECharacterState GetChracterState() const;
 
+	int32 GetExp() const;
+	float GetFinalAttackRange() const;
+
 private:
 	int32 AssetIndex = 0;
 
@@ -83,6 +86,7 @@ public:
 
 	UPROPERTY()
 	class AABPlayerController* ABPlayerController;
+
 	
 public:
 	// Attack

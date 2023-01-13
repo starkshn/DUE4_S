@@ -4,6 +4,7 @@
 #include "ABPlayerController.h"
 #include "ABHUDWidget.h"
 #include "ABPlayerState.h"
+#include "ABCharacter.h"
 
 AABPlayerController::AABPlayerController()
 {
@@ -31,6 +32,16 @@ UABHUDWidget* AABPlayerController::GetHUDWidget() const
 	return HUDWidget;
 }
 
+void AABPlayerController::NPCKill(AABCharacter* KilledNPC) const
+{
+	ABPlayerState->AddExp(KilledNPC->GetExp());
+}
+
+void AABPlayerController::AddGameScore() const
+{
+	ABPlayerState->AddGameScore();
+}
+
 // 플레이시 뷰포트 클릭 생략
 // UI를 배제하고 게임에게만 입력을 전달하도록 하는 부분
 void AABPlayerController::BeginPlay()
@@ -43,7 +54,7 @@ void AABPlayerController::BeginPlay()
 	HUDWidget = CreateWidget<UABHUDWidget>(this, HUDWidgetClass);
 	HUDWidget->AddToViewport();
 
-	auto ABPlayerState = Cast<AABPlayerState>(PlayerState);
+	ABPlayerState = Cast<AABPlayerState>(PlayerState);
 	ABCHECK(nullptr != ABPlayerState);
 	HUDWidget->BindPlayerState(ABPlayerState);
 	ABPlayerState->OnPlayerStateChanged.Broadcast();
